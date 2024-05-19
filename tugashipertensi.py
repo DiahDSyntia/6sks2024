@@ -99,7 +99,7 @@ if selected == "Home":
 if selected == "Datasets":
     st.title(f"{selected}")
     st.write("Data yang digunakan yaitu data Penyakit Hipertensi dari UPT Puskesmas Modopuro Mojokerto.")
-    data_hp = pd.read_csv("https://raw.githubusercontent.com/DiahDSyntia/Tugas-Akhir/main/DATABARU3.xlsx%20-%20DATAFIX.csv")
+    data_hp = pd.read_csv("https://raw.githubusercontent.com/DiahDSyntia/Tugas-Akhir/main/DATAFIXX.csv",sep=';')
     st.write("Dataset Hipertensi : ", data_hp) 
     st.write('Jumlah baris dan kolom :', data_hp.shape)
     X=data_hp.iloc[:,0:7].values 
@@ -119,7 +119,7 @@ if selected == "Pre-Processing":
     st.markdown('<h3 style="text-align: left;"> Data Asli </h1>', unsafe_allow_html=True)
     st.write("Berikut merupakan data asli yang didapat dari UPT Puskesmas Modopuro Mojokerto.")
     
-    df = pd.read_csv("https://raw.githubusercontent.com/DiahDSyntia/Tugas-Akhir/main/DATABARU3.xlsx%20-%20DATAFIX.csv")
+    df = pd.read_csv("https://raw.githubusercontent.com/DiahDSyntia/Tugas-Akhir/main/DATAFIXX.csv",sep=';')
     st.write("Dataset Hipertensi : ", df) 
     st.markdown('<h3 style="text-align: left;"> Lakukan Cleaning Data </h1>', unsafe_allow_html=True)
     if st.button("Clean Data"):
@@ -146,14 +146,14 @@ if selected == "Pre-Processing":
 
 if selected == "Modelling":
     st.write("Hasil Akurasi, Presisi, Recall, F1- Score Metode SVM")
-    data = pd.read_csv('https://raw.githubusercontent.com/DiahDSyntia/Tugas-Akhir/main/datanormalisasi.csv', sep=';')
+    data = pd.read_csv('https://raw.githubusercontent.com/DiahDSyntia/Tugas-Akhir/main/datanormalisasi%20(3).csv', sep=';')
 
     # Memisahkan fitur dan target
     X = data[['Usia', 'IMT', 'Sistole', 'Diastole', 'Nafas','Detak Nadi','JK_L','JK_P']]
     y = data['Diagnosa']
 
     # Bagi dataset menjadi data latih dan data uji
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
 
     # Inisialisasi model SVM sebagai base estimator
     model = SVC(kernel='rbf', C=1, gamma=1)
@@ -238,12 +238,12 @@ if selected == "Modelling":
         st.markdown(html_code, unsafe_allow_html=True)
 
 if selected == "Implementation":
-    data = pd.read_csv('https://raw.githubusercontent.com/DiahDSyntia/Tugas-Akhir/main/datanormalisasi2.csv', sep=';')
+    data = pd.read_csv('https://raw.githubusercontent.com/DiahDSyntia/Tugas-Akhir/main/datanormalisasi%20(3).csv', sep=';')
         
     #st.write("Dataset Hipertensi : ", data)
     
     # Memisahkan fitur dan target
-    X = data[['Usia', 'IMT', 'Sistole', 'Diastole', 'Nafas','Detak Nadi','Jenis Kelamin']]
+    X = data[['Usia', 'IMT', 'Sistole', 'Diastole', 'Nafas','Detak Nadi','JK_L','JK_P']]
     y = data['Diagnosa']
 
     # Bagi dataset menjadi data latih dan data uji
@@ -319,6 +319,8 @@ if selected == "Implementation":
     Diastole = st.number_input("Diastole", min_value=0, max_value=200)
     Nafas = st.number_input("Nafas", min_value=0, max_value=100)
     Detak_nadi = st.number_input("Detak Nadi", min_value=0, max_value=300)
+    # Pilihan metode
+    metode = st.selectbox("Pilih Metode", ["SVM", "SVM + Bagging"])
     submit = st.button("Submit")
     
     if submit:
@@ -334,18 +336,26 @@ if selected == "Implementation":
             'Detak Nadi': [Detak_nadi]
         }
         new_data = pd.DataFrame(data)
-        datatest = pd.read_csv('https://raw.githubusercontent.com/DiahDSyntia/Tugas-Akhir/main/datatestingsebnormalisasi1.csv')  
+        datatest = pd.read_csv('https://raw.githubusercontent.com/DiahDSyntia/Tugas-Akhir/main/X_testbelumnormalisasi.csv')  
         datatest = pd.concat([datatest, new_data], ignore_index=True)
         #st.write(datatest)
-        datanorm = joblib.load('scaler.pkl').fit_transform(datatest)
-        datapredict = joblib.load('modelrbf.pkl').predict(datanorm)
+        datanorm = joblib.load('scalernormalisasi.pkl').fit_transform(datatest)
+        # Prediksi dengan metode yang dipilih
+        if metode == "SVM":
+            model = joblib.load('modelrbfc1.pkl')
+            model_name = "SVM"
+        else:  # SVM + Bagging
+            model = joblib.load('modelbagging (1).pkl')
+            model_name = "SVM + Bagging"
+        datapredict = model.predict(datanorm)
 
         st.write('Data yang Diinput:')
         st.write(f'- Jenis Kelamin: {Jenis_Kelamin}, Usia: {Usia}, IMT: {IMT}, Sistole: {Sistole}, Diastole: {Diastole}, Nafas: {Nafas}, Detak Nadi: {Detak_nadi}')
+        st.write(f'Hasil prediksi menggunakan model: {model_name}')
         
-        if datapredict[-1] == 1 :
-            st.write("""# Hasil Prediksi : Hipertensi 1, Silahkan Ke Dokter""")
+        if datapredict[-1] == 1:
+        st.write(f"## Hasil Prediksi Menggunakan {model_name}: Hipertensi 1, Silahkan Ke Dokter")
         elif datapredict[-1] == 2:
-            st.write("# Hipertensi 2, Silahkan ke dokter")
+            st.write(f"## Hasil Prediksi Menggunakan {model_name}: Hipertensi 2, Silahkan ke dokter")
         else:
-            st.write("# Tidak Hipertensi")
+            st.write(f"## Hasil Prediksi Menggunakan {model_name}: Tidak Hipertensi")
